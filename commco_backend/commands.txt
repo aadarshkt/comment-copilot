@@ -1,0 +1,5 @@
+Create database 
+psql -U aadarshkt -d postgres
+
+Run sql file 
+psql -U aadarshkt -d comment_copilot -f init_db.sql

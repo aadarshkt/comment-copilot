@@ -1,0 +1,37 @@
+# -----------------------------------------------------------------------------
+# Core Web Framework
+# -----------------------------------------------------------------------------
+Flask==3.0.3            # The micro web framework for our API.
+gunicorn==22.0.0        # WSGI HTTP Server for running Flask in production.
+
+# -----------------------------------------------------------------------------
+# Database & ORM (PostgreSQL)
+# -----------------------------------------------------------------------------
+SQLAlchemy==2.0.31      # The core Object-Relational Mapper (ORM) for Python.
+psycopg==3.2.9  # PostgreSQL adapter for Python. Use this for ease of installation.
+Flask-SQLAlchemy==3.1.1 # Integrates SQLAlchemy with Flask, simplifying session management.
+Flask-Migrate==4.0.7    # Handles SQLAlchemy database migrations via Alembic.
+alembic==1.13.1         # The database migration tool used by Flask-Migrate.
+psycopg2==2.9.10
+
+# -----------------------------------------------------------------------------
+# Background Tasks & Asynchronous Jobs
+# -----------------------------------------------------------------------------
+celery==5.4.0           # Distributed task queue for running background jobs (fetching comments, AI calls).
+redis==5.0.7            # The Python client for Redis, which will act as our Celery message broker.
+
+# -----------------------------------------------------------------------------
+# External APIs (Google & OpenAI)
+# -----------------------------------------------------------------------------
+google-api-python-client==2.134.0 # The official Google API client library for Python.
+google-auth==2.29.0               # Google's library for authentication.
+google-auth-oauthlib==1.2.0       # OAuth 2.0 integration for user authentication with Google.
+google-generativeai==0.3.2
+# -----------------------------------------------------------------------------
+# Utilities & Helper Libraries
+# -----------------------------------------------------------------------------
+python-dotenv==1.0.1    # Reads key-value pairs from a .env file and sets them as environment variables.
+cryptography==42.0.8    # Provides cryptographic recipes and primitives for encrypting tokens.
+Flask-Cors==4.0.1       # Handles Cross-Origin Resource Sharing (CORS), necessary for your React frontend.
+python-dateutil==2.9.0  # Useful for parsing ISO 8601 date strings from the YouTube API.
+requests==2.32.3        # Often a dependency of other libraries, good to have explicitly for HTTP requests.
