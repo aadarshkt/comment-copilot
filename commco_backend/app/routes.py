@@ -17,6 +17,12 @@ import google_auth_oauthlib.flow
 from google.oauth2 import credentials
 import requests
 
+import os
+# THIS IS THE FIX:
+# This line tells oauthlib that it's okay to use HTTP for local development.
+# You MUST NOT use this in production.
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 # Define the Blueprint for our API routes
 main_bp = Blueprint('main', __name__, url_prefix='/api')
 

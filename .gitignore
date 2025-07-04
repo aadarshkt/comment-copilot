@@ -1,2 +1,4 @@
 /.DS_Store
 /.venv
+/commco_backend/__pycache__
+commco_backend/client_secret.json
