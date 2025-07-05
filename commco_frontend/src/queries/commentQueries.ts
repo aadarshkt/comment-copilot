@@ -32,3 +32,27 @@ export const useSyncChannelMutation = () => {
     },
   })
 }
+
+// Mutation to reply to a comment
+export const useReplyToCommentMutation = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      commentId,
+      replyText,
+    }: {
+      commentId: number
+      replyText: string
+    }) => {
+      const response = await api.post(`/comments/${commentId}/reply`, {
+        reply_text: replyText,
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      // Invalidate all comments queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['comments'] })
+    },
+  })
+}

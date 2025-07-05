@@ -320,7 +320,7 @@ def get_comments():
         "Miscellaneous",
         "All",
     ]
-    category_filter = request.args.get("category", "Needs Action")
+    category_filter = request.args.get("category", "All")
 
     debug("Fetching comments", user_id=g.user.id, category=category_filter)
 

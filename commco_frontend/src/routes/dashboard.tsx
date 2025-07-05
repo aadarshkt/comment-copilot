@@ -1,8 +1,8 @@
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { Outlet, createFileRoute } from '@tanstack/react-router'
 import { useAuth } from '../hooks/useAuth'
 
 export const Route = createFileRoute('/dashboard')({
-  beforeLoad: ({ context }) => {
+  beforeLoad: () => {
     // This will be called before the route loads
     // We'll handle auth check in the component instead
   },
