@@ -11,5 +11,5 @@ cors = CORS()
 
 celery = Celery(
     __name__,
-    include=["app.process_channel_comments"],
+    include=["app.tasks"],
 )

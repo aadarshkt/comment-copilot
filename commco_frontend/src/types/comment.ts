@@ -1,9 +1,10 @@
 export interface Comment {
   id: number
-  text: string
-  author: string
+  youtube_comment_id: string
+  text_original: string
+  author_name: string
+  author_avatar_url: string
+  video_id: string
   published_at: string
   category: string
-  video_title: string
-  video_url: string
 }

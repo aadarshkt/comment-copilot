@@ -42,6 +42,8 @@ def create_app(config_class=Config):
         broker_url=app.config["CELERY_BROKER_URL"],
         result_backend=app.config["CELERY_RESULT_BACKEND"],
         broker_connection_retry_on_startup=True,  # Ensures retry on startup for Celery 6+
+        GOOGLE_CLIENT_ID=app.config["GOOGLE_CLIENT_ID"],
+        GOOGLE_CLIENT_SECRET=app.config["GOOGLE_CLIENT_SECRET"],
     )
 
     class ContextTask(celery.Task):

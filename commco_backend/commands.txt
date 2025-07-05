@@ -3,3 +3,6 @@ psql -U aadarshkt -d postgres
 
 Run sql file 
 psql -U aadarshkt -d comment_copilot -f init_db.sql
+
+Run Worker
+celery -A run.celery worker --loglevel=INFO

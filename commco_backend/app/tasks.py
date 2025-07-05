@@ -1,9 +1,10 @@
 from flask import current_app
 from .models import db, User, Channel, Comment
-from .services import YouTubeService, decrypt_data, GeminiService
+from .services import YouTubeService, decrypt_data, GeminiService, encrypt_data
 from datetime import datetime
 from dateutil.parser import isoparse
 import google.oauth2.credentials
+import google.auth.transport.requests
 from .extensions import celery
 
 
@@ -27,12 +28,31 @@ def process_channel_comments(channel_id):
         client_secret=celery.conf.get("GOOGLE_CLIENT_SECRET"),
     )
 
+    # 2. Refresh token if needed
+    if creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(google.auth.transport.requests.Request())
+            # Update stored tokens with refreshed ones
+            user.access_token_encrypted = encrypt_data(creds.token)
+            if creds.refresh_token:
+                user.refresh_token_encrypted = encrypt_data(creds.refresh_token)
+            db.session.commit()
+        except Exception as e:
+            print(f"Failed to refresh token: {e}")
+            return f"Token refresh failed: {e}"
+
     # 2. Initialize Services
     yt_service = YouTubeService(credentials=creds)
     ai_service = GeminiService()
 
     # 3. Fetch latest comments from YouTube
-    comments_from_api = yt_service.get_latest_comments(channel.youtube_channel_id)
+    try:
+        comments_from_api = yt_service.get_latest_comments(channel.youtube_channel_id)
+    except Exception as e:
+        if "insufficientPermissions" in str(e) or "403" in str(e):
+            return f"Permission denied: User may not have access to comments on channel {channel.youtube_channel_id}. Error: {e}"
+        else:
+            return f"Failed to fetch comments: {e}"
 
     # 4. Process and save new comments
     new_comment_count = 0

@@ -29,6 +29,8 @@ export const useLogoutMutation = () => {
       queryClient.setQueryData(['user', 'me'], null)
       // Invalidate user query to ensure clean state
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
+      // Redirect to home page
+      window.location.href = '/'
     },
   })
 }

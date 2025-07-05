@@ -9,7 +9,12 @@ import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Skeleton } from '../../components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 
-const CATEGORIES = ['Needs Action', 'Resolved', 'Spam', 'All']
+const CATEGORIES = [
+  'Needs Action',
+  'Quick Acknowledge',
+  'Review & Delete',
+  'All',
+]
 
 export const Route = createFileRoute('/dashboard/comments')({
   component: CommentsPage,
@@ -88,13 +93,28 @@ function CommentsPage() {
                   key={comment.id}
                   className="border rounded-lg p-4 bg-white shadow"
                 >
-                  <div className="font-semibold">{comment.author}</div>
-                  <div className="text-sm text-gray-500">
-                    {comment.published_at}
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{comment.author_name}</div>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        comment.category === 'Needs Action'
+                          ? 'bg-blue-100 text-blue-800'
+                          : comment.category === 'Quick Acknowledge'
+                            ? 'bg-green-100 text-green-800'
+                            : comment.category === 'Review & Delete'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {comment.category}
+                    </span>
                   </div>
-                  <div className="mt-2">{comment.text}</div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(comment.published_at).toLocaleDateString()}
+                  </div>
+                  <div className="mt-2">{comment.text_original}</div>
                   <div className="mt-2 text-xs text-gray-400">
-                    {comment.video_title}
+                    Video ID: {comment.video_id}
                   </div>
                 </div>
               ))

@@ -26,16 +26,6 @@ export default function Header() {
           <Link to="/" className="font-bold text-xl">
             Comment Copilot
           </Link>
-          {isAuthenticated && (
-            <nav className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="text-sm font-medium transition-colors hover:text-primary"
-              >
-                Comments
-              </Link>
-            </nav>
-          )}
         </div>
 
         <div className="flex items-center space-x-4">
