@@ -159,7 +159,7 @@ def google_callback():
     session['user_id'] = user.id
 
     # Redirect to the frontend dashboard
-    return redirect(os.getenv('FRONTEND_URL', 'http://localhost:3000/dashboard'))
+    return redirect(os.getenv('FRONTEND_URL', 'http://localhost:3000/dashboard/comments'))
 
 
 @main_bp.route('/auth/logout', methods=['POST'])
