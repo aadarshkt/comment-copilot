@@ -54,38 +54,44 @@ def process_channel_comments(channel_id):
         else:
             return f"Failed to fetch comments: {e}"
 
-    # 4. Process and save new comments
+    # 4. Process and save/update comments
     new_comment_count = 0
+    updated_comment_count = 0
     for item in comments_from_api:
         top_level_comment = item["snippet"]["topLevelComment"]["snippet"]
         comment_id_yt = item["snippet"]["topLevelComment"]["id"]
 
         # Check if comment already exists
-        if (
-            db.session.query(Comment.id)
+        existing_comment = (
+            db.session.query(Comment)
             .filter_by(youtube_comment_id=comment_id_yt)
             .first()
-        ):
-            continue  # Skip existing comment
+        )
 
         # Classify with AI
         category = ai_service.classify_comment(top_level_comment["textOriginal"])
 
-        # Create new comment object
-        new_comment = Comment(
-            youtube_comment_id=comment_id_yt,
-            channel_id=channel.id,
-            text_original=top_level_comment["textOriginal"],
-            author_name=top_level_comment["authorDisplayName"],
-            author_avatar_url=top_level_comment["authorProfileImageUrl"],
-            video_id=top_level_comment["videoId"],
-            published_at=isoparse(top_level_comment["publishedAt"]),
-            category=category,
-        )
-        db.session.add(new_comment)
-        new_comment_count += 1
+        if existing_comment:
+            # Update existing comment's category
+            if existing_comment.category != category:
+                existing_comment.category = category
+                updated_comment_count += 1
+        else:
+            # Create new comment object
+            new_comment = Comment(
+                youtube_comment_id=comment_id_yt,
+                channel_id=channel.id,
+                text_original=top_level_comment["textOriginal"],
+                author_name=top_level_comment["authorDisplayName"],
+                author_avatar_url=top_level_comment["authorProfileImageUrl"],
+                video_id=top_level_comment["videoId"],
+                published_at=isoparse(top_level_comment["publishedAt"]),
+                category=category,
+            )
+            db.session.add(new_comment)
+            new_comment_count += 1
 
-    if new_comment_count > 0:
+    if new_comment_count > 0 or updated_comment_count > 0:
         db.session.commit()
 
-    return f"Processed {len(comments_from_api)} comments. Added {new_comment_count} new comments."
+    return f"Processed {len(comments_from_api)} comments. Added {new_comment_count} new comments, updated {updated_comment_count} existing comments."

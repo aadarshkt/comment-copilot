@@ -312,7 +312,14 @@ def get_comments():
     Fetches categorized comments from the database for the user's channel.
     Accepts a 'category' query parameter to filter results.
     """
-    valid_categories = ["Needs Action", "Quick Acknowledge", "Review & Delete", "All"]
+    valid_categories = [
+        "Reply to Question",
+        "Appreciate Fan",
+        "Review & Consider",
+        "Delete Junk",
+        "Miscellaneous",
+        "All",
+    ]
     category_filter = request.args.get("category", "Needs Action")
 
     debug("Fetching comments", user_id=g.user.id, category=category_filter)

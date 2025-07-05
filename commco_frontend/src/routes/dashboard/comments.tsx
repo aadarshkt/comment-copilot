@@ -10,9 +10,11 @@ import { Skeleton } from '../../components/ui/skeleton'
 import { Alert, AlertDescription, AlertTitle } from '../../components/ui/alert'
 
 const CATEGORIES = [
-  'Needs Action',
-  'Quick Acknowledge',
-  'Review & Delete',
+  'Reply to Question',
+  'Appreciate Fan',
+  'Review & Consider',
+  'Delete Junk',
+  'Miscellaneous',
   'All',
 ]
 

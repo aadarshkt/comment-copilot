@@ -85,21 +85,44 @@ class GeminiService:
         return None
 
     def classify_comment(self, comment_text):
-        prompt = """
-            You are a YouTube Comment Classifier. Categorize the following comment into ONE of these categories: 
-            \"Needs Action\", \"Quick Acknowledge\", \"Review & Delete\".
+        prompt = f"""
+            You are a YouTube Comment Classifier for a professional content creator. Your job is to categorize the following comment into ONE of the following action-based categories:
+            - "Reply to Question": The comment is asking a direct, specific question that needs an answer.
+            - "Appreciate Fan": The comment contains strong, specific praise, or indicates loyal viewership. It deserves a heart.
+            - "Review & Consider": The comment is constructive criticism, a polite disagreement, or a suggestion for improvement. It is not spam but requires careful thought.
+            - "Delete Junk": The comment is spam, a scam, hate speech, or irrelevant self-promotion.
+            - "Miscellaneous": The comment doesn't fit into any of the above categories or is unclear.
 
-            - \"Needs Action\": The comment is a direct question or specific, constructive feedback.
-            - \"Quick Acknowledge\": The comment is general praise, a simple reaction, or a short positive statement.
-            - \"Review & Delete\": The comment is spam, hate speech, a scam, or irrelevant self-promotion.
+            Analyze the user's comment below and return ONLY the category name in a JSON format in the given format only.
 
-            Comment: "{comment_text}"
-            Category:
+            Comment: {comment_text}
+
+            Your Response:
+            {{"category": "YOUR_CHOSEN_CATEGORY"}}
             """
         try:
-            category = self.get_text_response(prompt)
-            valid_categories = ["Needs Action", "Quick Acknowledge", "Review & Delete"]
-            return category if category in valid_categories else "Quick Acknowledge"
+            import json
+
+            response_text = self.get_text_response(prompt)
+            if response_text:
+                # Try to parse the JSON response
+                try:
+                    response_json = json.loads(response_text)
+                    category = response_json.get("category")
+                    if category:
+                        return category
+                except json.JSONDecodeError:
+                    # If JSON parsing fails, try to extract category from text
+                    if "Reply to Question" in response_text:
+                        return "Reply to Question"
+                    elif "Appreciate Fan" in response_text:
+                        return "Appreciate Fan"
+                    elif "Review & Consider" in response_text:
+                        return "Review & Consider"
+                    elif "Delete Junk" in response_text:
+                        return "Delete Junk"
+
+            return "Miscellaneous"
         except Exception as e:
             print(f"Error classifying comment with Gemini: {e}")
-            return "Quick Acknowledge"
+            return "Miscellaneous"
