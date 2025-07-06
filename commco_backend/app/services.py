@@ -39,6 +39,31 @@ class YouTubeService:
         response = request.execute()
         return response.get("items", [])
 
+    def reply_to_comment(self, comment_id, reply_text):
+        """
+        Reply to a YouTube comment using the comments.insert method.
+
+        Args:
+            comment_id (str): The YouTube comment ID to reply to
+            reply_text (str): The text of the reply
+
+        Returns:
+            dict: The response from the YouTube API containing the created reply
+        """
+        from .logging_utils import debug
+
+        debug("Replying to comment", comment_id=comment_id, reply_text=reply_text)
+        try:
+            request = self.service.comments().insert(
+                part="snippet",
+                body={"snippet": {"parentId": comment_id, "textOriginal": reply_text}},
+            )
+            response = request.execute()
+            return response
+        except Exception as e:
+            print(f"Error replying to comment: {e}")
+            raise e
+
 
 class GeminiService:
     def __init__(self):

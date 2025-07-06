@@ -391,3 +391,124 @@ def get_comments():
             error=str(e),
         )
         return jsonify({"error": "Failed to fetch comments."}), 500
+
+
+@main_bp.route("/comments/<int:comment_id>/reply", methods=["POST"])
+@login_required
+@log_request
+def reply_to_comment(comment_id):
+    """
+    Reply to a specific comment using the YouTube API.
+    """
+    debug("Processing reply to comment", user_id=g.user.id, comment_id=comment_id)
+
+    # Get the reply text from the request
+    data = request.get_json()
+    if not data or "reply_text" not in data:
+        warning(
+            "Missing reply_text in request", user_id=g.user.id, comment_id=comment_id
+        )
+        return jsonify({"error": "Missing reply_text in request body."}), 400
+
+    reply_text = data["reply_text"].strip()
+    if not reply_text:
+        warning("Empty reply text", user_id=g.user.id, comment_id=comment_id)
+        return jsonify({"error": "Reply text cannot be empty."}), 400
+
+    # Check if user has a channel
+    if not g.user.channels:
+        warning("Reply requested but no channel found", user_id=g.user.id)
+        return jsonify({"error": "No YouTube channel linked to this account."}), 404
+
+    channel = g.user.channels[0]
+
+    # Find the comment in our database
+    comment = Comment.query.filter_by(id=comment_id, channel_id=channel.id).first()
+    if not comment:
+        warning(
+            "Comment not found",
+            user_id=g.user.id,
+            comment_id=comment_id,
+            channel_id=channel.id,
+        )
+        return jsonify({"error": "Comment not found."}), 404
+
+    try:
+        # Get user's credentials
+        from .services import decrypt_data
+
+        access_token = decrypt_data(g.user.access_token_encrypted)
+
+        # Check if access token exists
+        if not access_token:
+            error("No access token found", user_id=g.user.id)
+            return (
+                jsonify(
+                    {"error": "Authentication token not found. Please log in again."}
+                ),
+                401,
+            )
+
+        # Create credentials object
+        from google.oauth2.credentials import Credentials
+
+        credentials = Credentials(
+            token=access_token,
+            refresh_token=(
+                decrypt_data(g.user.refresh_token_encrypted)
+                if g.user.refresh_token_encrypted
+                else None
+            ),
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=current_app.config.get("GOOGLE_CLIENT_ID"),
+            client_secret=current_app.config.get("GOOGLE_CLIENT_SECRET"),
+        )
+
+        # Create YouTube service and reply to comment
+        yt_service = YouTubeService(credentials=credentials)
+        response = yt_service.reply_to_comment(comment.youtube_comment_id, reply_text)
+
+        info(
+            "Successfully replied to comment",
+            user_id=g.user.id,
+            comment_id=comment_id,
+            youtube_comment_id=comment.youtube_comment_id,
+            reply_id=response.get("id"),
+        )
+
+        return (
+            jsonify(
+                {
+                    "message": "Reply sent successfully",
+                    "reply_id": response.get("id"),
+                    "reply_text": reply_text,
+                }
+            ),
+            201,
+        )
+
+    except Exception as e:
+        error(
+            "Failed to reply to comment",
+            user_id=g.user.id,
+            comment_id=comment_id,
+            youtube_comment_id=comment.youtube_comment_id,
+            error=str(e),
+        )
+
+        # Provide more specific error messages
+        error_message = "Failed to send reply"
+        error_str = str(e).lower()
+
+        if "quota" in error_str:
+            error_message = "YouTube API quota exceeded. Please try again later."
+        elif "unauthorized" in error_str or "forbidden" in error_str:
+            error_message = "Not authorized to reply to this comment. Please check your permissions."
+        elif "not found" in error_str:
+            error_message = "Comment not found on YouTube. It may have been deleted."
+        elif "invalid" in error_str and "token" in error_str:
+            error_message = "Authentication token expired. Please log in again."
+        else:
+            error_message = f"Failed to send reply: {str(e)}"
+
+        return jsonify({"error": error_message}), 500

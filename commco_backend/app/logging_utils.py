@@ -5,6 +5,32 @@ from functools import wraps
 from flask import request, g
 import traceback
 
+"""
+Logging Configuration
+
+This module provides a comprehensive logging system with the following features:
+- Separate log files for different log levels (app.log, debug.log, error.log)
+- Context-aware logging with additional metadata
+- Configurable log levels via environment variables
+
+Environment Variables:
+- APP_LOG_LEVEL: Log level for app.log (default: INFO)
+- DEBUG_LOG_LEVEL: Log level for debug.log (default: DEBUG) 
+- ERROR_LOG_LEVEL: Log level for error.log (default: ERROR)
+
+Log Files:
+- logs/app.log: General application logs (INFO and above by default)
+- logs/debug.log: Debug-level logs (DEBUG and above)
+- logs/error.log: Error-level logs (ERROR and above)
+
+Usage:
+    from app.logging_utils import debug, info, warning, error, critical
+    
+    debug("Debug message", user_id=123, operation="create")
+    info("Info message", user_email="user@example.com")
+    error("Error message", error="Something went wrong")
+"""
+
 
 # Custom formatter that includes extra context
 class ContextFormatter(logging.Formatter):
@@ -12,80 +38,39 @@ class ContextFormatter(logging.Formatter):
         # Format the basic message
         formatted = super().format(record)
 
-        # Add extra context if present
-        if (
-            hasattr(record, "user_id")
-            or hasattr(record, "count")
-            or hasattr(record, "email")
-            or hasattr(record, "ip")
-            or hasattr(record, "method")
-            or hasattr(record, "path")
-            or hasattr(record, "error")
-            or hasattr(record, "status_code")
-            or hasattr(record, "endpoint")
-            or hasattr(record, "execution_time")
-            or hasattr(record, "function")
-            or hasattr(record, "table")
-            or hasattr(record, "record_id")
-            or hasattr(record, "operation")
-            or hasattr(record, "success")
-            or hasattr(record, "channel_id")
-            or hasattr(record, "youtube_channel_id")
-            or hasattr(record, "category")
-            or hasattr(record, "google_id")
-            or hasattr(record, "file_path")
-            or hasattr(record, "session_state")
-            or hasattr(record, "request_state")
-            or hasattr(record, "status_code")
-            or hasattr(record, "response_text")
-            or hasattr(record, "dividend")
-            or hasattr(record, "divisor")
-            or hasattr(record, "user_level")
-            or hasattr(record, "request_count")
-            or hasattr(record, "limit")
-            or hasattr(record, "database")
-            or hasattr(record, "retry_count")
-            or hasattr(record, "input_value")
-            or hasattr(record, "valid_categories")
-            or hasattr(record, "reason")
-        ):
-            context = {}
-            for key, value in record.__dict__.items():
-                if key not in [
-                    "name",
-                    "msg",
-                    "args",
-                    "levelname",
-                    "levelno",
-                    "pathname",
-                    "filename",
-                    "module",
-                    "lineno",
-                    "funcName",
-                    "created",
-                    "msecs",
-                    "relativeCreated",
-                    "thread",
-                    "threadName",
-                    "processName",
-                    "process",
-                    "getMessage",
-                    "exc_info",
-                    "exc_text",
-                    "stack_info",
-                ]:
-                    if key not in [
-                        "asctime",
-                        "name",
-                        "levelname",
-                        "funcName",
-                        "lineno",
-                    ]:
-                        context[key] = value
-
-            if context:
-                formatted += f" | Context: {json.dumps(context, default=str)}"
-
+        # Always add extra context if present (dynamically, not hardcoded)
+        standard_keys = set(
+            [
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "getMessage",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "asctime",
+            ]
+        )
+        context = {}
+        for key, value in record.__dict__.items():
+            if key not in standard_keys:
+                context[key] = value
+        if context:
+            formatted += f" | Context: {json.dumps(context, default=str)}"
         return formatted
 
 
@@ -103,21 +88,38 @@ def setup_logging():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # File handler for all logs
+    # Get log levels from environment variables (default to INFO for app.log, DEBUG for debug.log)
+    app_log_level = getattr(
+        logging, os.getenv("APP_LOG_LEVEL", "INFO").upper(), logging.INFO
+    )
+    debug_log_level = getattr(
+        logging, os.getenv("DEBUG_LOG_LEVEL", "DEBUG").upper(), logging.DEBUG
+    )
+    error_log_level = getattr(
+        logging, os.getenv("ERROR_LOG_LEVEL", "ERROR").upper(), logging.ERROR
+    )
+
+    # File handler for all logs (INFO and above by default)
     file_handler = logging.FileHandler("logs/app.log")
-    file_handler.setLevel(logging.INFO)
+    file_handler.setLevel(app_log_level)
     file_format = ContextFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
     )
     file_handler.setFormatter(file_format)
 
+    # Debug file handler (DEBUG and above)
+    debug_handler = logging.FileHandler("logs/debug.log")
+    debug_handler.setLevel(debug_log_level)
+    debug_handler.setFormatter(file_format)
+
     # Error file handler
     error_handler = logging.FileHandler("logs/error.log")
-    error_handler.setLevel(logging.ERROR)
+    error_handler.setLevel(error_log_level)
     error_handler.setFormatter(file_format)
 
-    # Add handlers to logger (file handlers only)
+    # Add handlers to logger
     logger.addHandler(file_handler)
+    logger.addHandler(debug_handler)
     logger.addHandler(error_handler)
 
     return logger

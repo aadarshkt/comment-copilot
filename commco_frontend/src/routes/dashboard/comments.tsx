@@ -38,13 +38,28 @@ function CommentsPage() {
   const syncMutation = useSyncChannelMutation()
   const replyMutation = useReplyToCommentMutation()
   const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [replyingTo, setReplyingTo] = useState<number | null>(null)
   const [replyTexts, setReplyTexts] = useState<Record<number, string>>({})
 
-  const handleSync = async () => {
-    await syncMutation.mutateAsync()
+  const showToastMessage = (
+    message: string,
+    type: 'success' | 'error' = 'success',
+  ) => {
+    setToastMessage(message)
+    setToastType(type)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 2000)
+    setTimeout(() => setShowToast(false), 3000)
+  }
+
+  const handleSync = async () => {
+    try {
+      await syncMutation.mutateAsync()
+      showToastMessage('Comments have been refreshed.')
+    } catch (error) {
+      showToastMessage('Failed to sync comments. Please try again.', 'error')
+    }
   }
 
   const handleReplyClick = (commentId: number) => {
@@ -78,10 +93,14 @@ function CommentsPage() {
         delete newState[commentId]
         return newState
       })
-      setShowToast(true)
-      setTimeout(() => setShowToast(false), 2000)
+      showToastMessage('Reply sent successfully!')
     } catch (error) {
       console.error('Failed to send reply:', error)
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to send reply. Please try again.'
+      showToastMessage(errorMessage, 'error')
     }
   }
 
@@ -125,13 +144,11 @@ function CommentsPage() {
       </div>
       {showToast && (
         <div className="fixed top-4 right-4 z-50">
-          <Alert>
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>
-              {replyMutation.isSuccess
-                ? 'Reply sent successfully!'
-                : 'Comments have been refreshed.'}
-            </AlertDescription>
+          <Alert variant={toastType === 'success' ? 'default' : 'destructive'}>
+            <AlertTitle>
+              {toastType === 'success' ? 'Success' : 'Error'}
+            </AlertTitle>
+            <AlertDescription>{toastMessage}</AlertDescription>
           </Alert>
         </div>
       )}
@@ -219,8 +236,11 @@ function CommentsPage() {
                       size="default"
                       variant="outline"
                       onClick={() => handleReplyClick(comment.id)}
+                      disabled={replyMutation.isPending}
                     >
-                      Reply
+                      {replyMutation.isPending && replyingTo === comment.id
+                        ? 'Sending...'
+                        : 'Reply'}
                     </Button>
                   </div>
 
