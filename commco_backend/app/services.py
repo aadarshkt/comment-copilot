@@ -1,5 +1,3 @@
-import google.oauth2.credentials
-import google_auth_oauthlib.flow
 from googleapiclient.discovery import build
 from cryptography.fernet import Fernet
 from flask import current_app
@@ -112,11 +110,12 @@ class GeminiService:
     def classify_comment(self, comment_text):
         prompt = f"""
             You are a YouTube Comment Classifier for a professional content creator. Your job is to categorize the following comment into ONE of the following action-based categories:
-            - "Reply to Question": The comment is asking a direct, specific question that needs an answer.
-            - "Appreciate Fan": The comment contains strong, specific praise, or indicates loyal viewership. It deserves a heart.
-            - "Review & Consider": The comment is constructive criticism, a polite disagreement, or a suggestion for improvement. It is not spam but requires careful thought.
-            - "Delete Junk": The comment is spam, a scam, hate speech, or irrelevant self-promotion.
-            - "Miscellaneous": The comment doesn't fit into any of the above categories or is unclear.
+            - \"Reply to Question\": The comment is asking a direct, specific question that needs an answer.
+            - \"Appreciate Fan\": The comment contains strong, specific praise, or indicates loyal viewership. It deserves a heart.
+            - \"Ideas\": The comment is a suggestion for improvement, a new video idea, or a creative proposal. It is not spam but could inspire future content.
+            - \"Criticisms\": The comment is constructive criticism, a polite disagreement, or feedback that points out flaws or issues. It is not spam but requires careful thought.
+            - \"Delete Junk\": The comment is spam, a scam, hate speech, or irrelevant self-promotion.
+            - \"Miscellaneous\": The comment doesn't fit into any of the above categories or is unclear.
 
             Analyze the user's comment below and return ONLY the category name in a JSON format in the given format only.
 
@@ -142,8 +141,10 @@ class GeminiService:
                         return "Reply to Question"
                     elif "Appreciate Fan" in response_text:
                         return "Appreciate Fan"
-                    elif "Review & Consider" in response_text:
-                        return "Review & Consider"
+                    elif "Ideas" in response_text:
+                        return "Ideas"
+                    elif "Criticisms" in response_text:
+                        return "Criticisms"
                     elif "Delete Junk" in response_text:
                         return "Delete Junk"
 

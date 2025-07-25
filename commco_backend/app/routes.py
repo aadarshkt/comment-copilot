@@ -315,7 +315,8 @@ def get_comments():
     valid_categories = [
         "Reply to Question",
         "Appreciate Fan",
-        "Review & Consider",
+        "Ideas",
+        "Criticisms",
         "Delete Junk",
         "Miscellaneous",
         "All",
